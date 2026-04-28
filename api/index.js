@@ -16,17 +16,19 @@ app.use(cors({
   credentials: true
 }));
 
-const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID,
-  key_secret: process.env.RAZORPAY_KEY_SECRET
-});
-
 app.get("/", (req, res) => {
-  res.json({ message: "Backend Running" });
+  res.json({
+    message: "Backend Running"
+  });
 });
 
 app.post("/create-order", async (req, res) => {
   try {
+    const razorpay = new Razorpay({
+      key_id: process.env.RAZORPAY_KEY_ID,
+      key_secret: process.env.RAZORPAY_KEY_SECRET
+    });
+
     const { amount } = req.body;
 
     const order = await razorpay.orders.create({
@@ -36,29 +38,45 @@ app.post("/create-order", async (req, res) => {
     });
 
     res.json(order);
+
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({
+      error: error.message
+    });
   }
 });
 
 app.post("/verify-payment", (req, res) => {
-  const {
-    razorpay_order_id,
-    razorpay_payment_id,
-    razorpay_signature
-  } = req.body;
+  try {
+    const {
+      razorpay_order_id,
+      razorpay_payment_id,
+      razorpay_signature
+    } = req.body;
 
-  const body = razorpay_order_id + "|" + razorpay_payment_id;
+    const body =
+      razorpay_order_id + "|" + razorpay_payment_id;
 
-  const expectedSignature = crypto
-    .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
-    .update(body)
-    .digest("hex");
+    const expected = crypto
+      .createHmac(
+        "sha256",
+        process.env.RAZORPAY_KEY_SECRET
+      )
+      .update(body)
+      .digest("hex");
 
-  if (expectedSignature === razorpay_signature) {
-    res.json({ success: true });
-  } else {
-    res.status(400).json({ success: false });
+    if (expected === razorpay_signature) {
+      return res.json({ success: true });
+    }
+
+    return res.status(400).json({
+      success: false
+    });
+
+  } catch (error) {
+    return res.status(500).json({
+      error: error.message
+    });
   }
 });
 
