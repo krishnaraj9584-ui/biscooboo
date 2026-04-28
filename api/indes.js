@@ -65,6 +65,23 @@ app.post("/verify-payment", (req, res) => {
   } else {
     res.status(400).json({ success: false });
   }
+
+  {
+  "version": 2,
+  "functions": {
+    "api/index.js": {
+      "runtime": "@vercel/node"
+    }
+  },
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/api/index.js"
+    }
+  ]
+}
 });
+
+
 
 module.exports = app;
