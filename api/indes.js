@@ -29,35 +29,30 @@ app.post("/create-order", async (req, res) => {
   try {
     const { amount } = req.body;
 
-    const options = {
-      amount: amount,
+    const order = await razorpay.orders.create({
+      amount,
       currency: "INR",
       receipt: "receipt_" + Date.now()
-    };
-
-    const order = await razorpay.orders.create(options);
+    });
 
     res.json(order);
-
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 
 app.post("/verify-payment", (req, res) => {
-
   const {
     razorpay_order_id,
     razorpay_payment_id,
     razorpay_signature
   } = req.body;
 
-  const body =
-    razorpay_order_id + "|" + razorpay_payment_id;
+  const body = razorpay_order_id + "|" + razorpay_payment_id;
 
   const expectedSignature = crypto
     .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
-    .update(body.toString())
+    .update(body)
     .digest("hex");
 
   if (expectedSignature === razorpay_signature) {
@@ -65,23 +60,6 @@ app.post("/verify-payment", (req, res) => {
   } else {
     res.status(400).json({ success: false });
   }
-
-  {
-  "version": 2,
-  "routes": [
-    { "src": "/(.*)", "dest": "/api/index.js" }
-  ]
-}
-  },
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "/api/index.js"
-    }
-  ]
-}
 });
-
-
 
 module.exports = app;
