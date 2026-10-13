@@ -8,18 +8,21 @@ const app = express();
 
 // Allow requests from the live Biscooboo frontend domains.
 // Keep CORS middleware before all API routes.
+const allowedOrigins = new Set([
+  'https://www.biscooboocookies.in',
+  'https://biscooboocookies.in'
+]);
 const corsOptions = {
-  origin: [
-    'https://www.biscooboocookies.in',
-    'https://biscooboocookies.in'
-  ],
-  methods: ['GET', 'POST', 'OPTIONS'],
+  origin(origin, callback) {
+    if (!origin || allowedOrigins.has(origin)) return callback(null, true);
+    return callback(new Error(`CORS origin not allowed: ${origin}`));
+  },
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
-  optionsSuccessStatus: 204
+  optionsSuccessStatus: 204,
+  maxAge: 86400
 };
-
 app.use(cors(corsOptions));
-app.options(/.*/, cors(corsOptions));
 app.use(express.json());
 
 // Read credentials from backend environment variables.
